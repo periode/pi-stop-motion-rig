@@ -3,13 +3,12 @@ import random
 import glob
 import os
 import pygame
-import textinput
 import re
 import sys
 
 from pygame.locals import *
 from gpiozero import Button
-from picamera2 import PiCamera2
+from picamera2 import Picamera2, Preview
 
 # 2 = delete movie / pink button
 # 3 = preview movie / green button
@@ -59,8 +58,6 @@ def display_start_screen(W, H, switch_frame):
     title_to_show = title_1 if switch_frame else title_2
     SCREEN.blit(title_to_show, (W/2-H*aspect/2, 0))
 
-    # TODO add WICO logo
-
     pygame.display.update()
     
 def display_create_video(W, H):
@@ -84,7 +81,7 @@ def frame_capture():
     ns = frame_get_numbers()
     n = max(ns) + 1 if len(ns) > 0 else 0
     frame_name = 'frames/frame_{n:04d}.jpg'.format(n=n)
-    CAMERA.capture_file(frame_name, use_video_port=True)
+    CAMERA.switch_mode_and_capture_file(CAMERA.create_still_configuration(), frame_name)
 
 
 def frame_display_ghost(W, H):
@@ -243,8 +240,8 @@ if __name__ == '__main__':
     pygame.display.toggle_fullscreen()
     
     CLOCK = pygame.time.Clock()
-    CAMERA = PiCamera()
-    camera_config = CAMERA.create_still_configuration(main={"size": (WIDTH, HEIGHT)}, lores={"size": (640, 480)}, display="lores")
+    CAMERA = Picamera2()
+    camera_config = CAMERA.create_preview_configuration()
     CAMERA.configure(camera_config)
     
     
@@ -266,7 +263,7 @@ if __name__ == '__main__':
                         print('start app')
                         reset = False
                         # show camera preview
-                        CAMERA.start_preview()
+                        CAMERA.start()
                         SCREEN.fill(WHITE)
                         pygame.display.update()
                         break
@@ -338,7 +335,7 @@ if __name__ == '__main__':
                     pygame.display.flip()
                 CLOCK.tick(FPS)
                 frame_display_ghost(WIDTH, HEIGHT)
-                CAMERA.start_preview(fullscreen=False, window = (W-WIDTH, 100, WIDTH, HEIGHT))
+                CAMERA.start_preview(Preview.QTGL)
             elif erase_last_frame:
                 print('erase last frame')
                 frame_erase_last()
