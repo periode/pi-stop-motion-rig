@@ -9,7 +9,7 @@ import sys
 
 from pygame.locals import *
 from gpiozero import Button
-from picamera import PiCamera
+from picamera2 import PiCamera2
 
 # 2 = delete movie / pink button
 # 3 = preview movie / green button
@@ -84,7 +84,7 @@ def frame_capture():
     ns = frame_get_numbers()
     n = max(ns) + 1 if len(ns) > 0 else 0
     frame_name = 'frames/frame_{n:04d}.jpg'.format(n=n)
-    CAMERA.capture(frame_name, use_video_port=True)
+    CAMERA.capture_file(frame_name, use_video_port=True)
 
 
 def frame_display_ghost(W, H):
@@ -244,8 +244,9 @@ if __name__ == '__main__':
     
     CLOCK = pygame.time.Clock()
     CAMERA = PiCamera()
-    CAMERA.preview_alpha = 200
-    CAMERA.resolution = (WIDTH, HEIGHT)
+    camera_config = CAMERA.create_still_configuration(main={"size": (WIDTH, HEIGHT)}, lores={"size": (640, 480)}, display="lores")
+    CAMERA.configure(camera_config)
+    
     
     # Main loop.
     while True:
